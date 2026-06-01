@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOOM Laundry Care — Reservar turno</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #0f0f0f;
+  --white: #fafaf8;
+  --cream: #f4f1eb;
+  --accent: #2d6a4f;
+  --accent-light: #e8f4f0;
+  --accent-mid: #52b788;
+  --gray: #888;
+  --border: #e0ddd6;
+  --error: #c0392b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--white); color: var(--black); }
+
+/* HEADER */
+.header {
+  background: var(--black);
+  color: var(--white);
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.logo-circle {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Serif Display', serif;
+  font-size: 16px; color: var(--white);
+}
+.header-text h1 { font-size: 16px; font-weight: 500; letter-spacing: .3px; }
+.header-text p { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+
+/* PROGRESS */
+.progress-bar {
+  background: var(--cream);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.prog-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gray);
+  flex: 1;
+}
+.prog-step.active { color: var(--accent); font-weight: 500; }
+.prog-step.done { color: var(--accent-mid); }
+.prog-dot {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 500;
+  background: var(--white);
+  flex-shrink: 0;
+}
+.prog-step.active .prog-dot { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.prog-step.done .prog-dot { border-color: var(--accent-mid); background: var(--accent-mid); color: white; }
+.prog-line { flex: 1; height: 1px; background: var(--border); margin: 0 4px; max-width: 30px; }
+
+/* MAIN */
+.main { padding: 24px 20px; max-width: 480px; margin: 0 auto; }
+
+/* SCREENS */
+.screen { display: none; animation: fadeIn .2s ease; }
+.screen.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.screen-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  margin-bottom: 4px;
+  color: var(--black);
+}
+.screen-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* DATE GRID */
+.date-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.date-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--white);
+  transition: all .15s;
+}
+.date-card:hover { border-color: var(--accent-mid); }
+.date-card.selected { border: 2px solid var(--accent); background: var(--accent-light); }
+.date-card.disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
+.date-day { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; }
+.date-num { font-size: 22px; font-weight: 300; color: var(--black); line-height: 1.2; }
+.date-month { font-size: 11px; color: var(--gray); }
+
+/* TIME GRID */
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.time-slot {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 4px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  background: var(--white);
+  transition: all .15s;
+  color: var(--black);
+}
+.time-slot:hover { border-color: var(--accent-mid); }
+.time-slot.selected { border: 2px solid var(--accent); background: var(--accent-light); color: var(--accent); font-weight: 500; }
+.time-slot.taken { background: var(--cream); color: var(--border); cursor: not-allowed; font-size: 11px; }
+
+/* FORM */
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; color: var(--gray); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--black);
+  background: var(--white);
+  transition: border-color .15s;
+  -webkit-appearance: none;
+}
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* BUTTONS */
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: var(--black);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: opacity .15s;
+  margin-top: 4px;
+}
+.btn-primary:hover { opacity: .85; }
+.btn-back {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: var(--gray);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: border-color .15s;
+}
+.btn-back:hover { border-color: var(--black); color: var(--black); }
+
+/* CONFIRM CARD */
+.confirm-card {
+  background: var(--cream);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.confirm-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.confirm-row:last-child { border-bottom: none; }
+.confirm-row span:first-child { color: var(--gray); }
+.confirm-row span:last-child { font-weight: 500; }
+
+/* SUCCESS */
+.success-wrap { text-align: center; padding: 20px 0; }
+.success-icon {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  border: 2px solid var(--accent-mid);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 28px;
+}
+.notif-list { margin: 16px 0; text-align: left; }
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent-mid);
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+.notif-text p { font-size: 13px; font-weight: 500; }
+.notif-text span { font-size: 12px; color: var(--gray); }
+
+/* ERROR MSG */
+.err-msg { font-size: 12px; color: var(--error); margin-top: 10px; display: none; }
+.err-msg.show { display: block; }
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 11px;
+  color: var(--border);
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-circle">LC</div>
+  <div class="header-text">
+    <h1>LOOM Laundry Care</h1>
+    <p>Suite 106, 4246 97 Street NW · Edmonton</p>
+  </div>
+</div>
+
+<div class="progress-bar" id="progress-bar">
+  <div class="prog-step active" id="ps1">
+    <div class="prog-dot">1</div>
+    <span>Día</span>
+  </div>
+  <div class="prog-line"></div>
+  <div class="prog-step" id="ps2">
+    <div class="prog-dot">2</div>
+    <span>Horario</span>
+  </div>
+  <div class="prog-line"></div>
+  <div class="prog-step" id="ps3">
+    <div class="prog-dot">3</div>
+    <span>Datos</span>
+  </div>
+  <div class="prog-line"></div>
+  <div class="prog-step" id="ps4">
+    <div class="prog-dot">✓</div>
+    <span>Listo</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- STEP 1: DATE -->
+  <div class="screen active" id="s1">
+    <p class="screen-title">Elegí un día</p>
+    <p class="screen-sub">Seleccioná cuándo querés traer tu ropa</p>
+    <div class="date-grid" id="date-grid"></div>
+    <div class="err-msg" id="err1">Por favor elegí un día para continuar.</div>
+    <button class="btn-primary" onclick="goStep(2)">Continuar →</button>
+  </div>
+
+  <!-- STEP 2: TIME -->
+  <div class="screen" id="s2">
+    <p class="screen-title">Elegí un horario</p>
+    <p class="screen-sub" id="s2-sub">Turnos disponibles</p>
+    <div class="time-grid" id="time-grid"></div>
+    <div class="err-msg" id="err2">Por favor elegí un horario para continuar.</div>
+    <button class="btn-primary" onclick="goStep(3)">Continuar →</button>
+    <button class="btn-back" onclick="goStep(1)">← Volver</button>
+  </div>
+
+  <!-- STEP 3: FORM -->
+  <div class="screen" id="s3">
+    <p class="screen-title">Tus datos</p>
+    <p class="screen-sub">Para confirmar tu turno y enviarte el aviso de retiro</p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="f-name" placeholder="María" />
+      </div>
+      <div class="form-group">
+        <label>Apellido</label>
+        <input type="text" id="f-last" placeholder="López" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Teléfono / WhatsApp</label>
+      <input type="tel" id="f-phone" placeholder="+1 780 000 0000" />
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="f-email" placeholder="tu@email.com" />
+    </div>
+    <div class="form-group">
+      <label>Servicio</label>
+      <select id="f-service">
+        <option value="">Seleccioná un servicio...</option>
+        <option value="wash-dry">Wash & dry (lavado y secado)</option>
+        <option value="wash-iron">Wash & iron (lavado + planchado)</option>
+        <option value="duvet">Duvet / bedding (ropa de cama)</option>
+        <option value="delicate">Delicate care (ropa delicada)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>¿Cuándo retirás tu ropa?</label>
+      <select id="f-pickup">
+        <option value="0">Mismo día (express)</option>
+        <option value="1">Al día siguiente</option>
+        <option value="2">En 2 días</option>
+        <option value="3">En 3 días</option>
+      </select>
+    </div>
+    <div class="err-msg" id="err3">Por favor completá nombre, teléfono, email y servicio.</div>
+    <button class="btn-primary" onclick="confirmBooking()">Confirmar turno</button>
+    <button class="btn-back" onclick="goStep(2)">← Volver</button>
+  </div>
+
+  <!-- STEP 4: SUCCESS -->
+  <div class="screen" id="s4">
+    <div class="success-wrap">
+      <div class="success-icon">✓</div>
+      <p class="screen-title" id="success-title">¡Turno confirmado!</p>
+      <p class="screen-sub" id="success-sub">Recibirás un aviso cuando tu ropa esté lista.</p>
+    </div>
+    <div class="confirm-card" id="confirm-summary"></div>
+    <div class="notif-list" id="notif-list"></div>
+    <button class="btn-primary" onclick="resetBooking()">+ Nuevo turno</button>
+  </div>
+
+</div>
+
+<div class="footer">LOOM Laundry Care · Edmonton, Alberta</div>
+
+<script>
+const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const TAKEN_TIMES = ['09:00','10:30','14:00'];
+const SERVICE_LABELS = {
+  'wash-dry': 'Wash & dry',
+  'wash-iron': 'Wash & iron',
+  'duvet': 'Duvet / bedding',
+  'delicate': 'Delicate care'
+};
+
+let sel = { date: null, time: null };
+
+function buildDates() {
+  const grid = document.getElementById('date-grid');
+  grid.innerHTML = '';
+  const today = new Date();
+  let count = 0;
+  for (let i = 0; i <= 14 && count < 9; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    if (d.getDay() === 0) continue;
+    count++;
+    const label = i === 0 ? 'Hoy' : i === 1 ? 'Mañana' : DAYS_ES[d.getDay()];
+    const el = document.createElement('div');
+    el.className = 'date-card';
+    el.innerHTML = `<div class="date-day">${label}</div><div class="date-num">${d.getDate()}</div><div class="date-month">${MONTHS_ES[d.getMonth()]}</div>`;
+    const dateStr = `${label} ${d.getDate()} ${MONTHS_ES[d.getMonth()]}`;
+    el.onclick = () => {
+      document.querySelectorAll('.date-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      sel.date = dateStr;
+    };
+    grid.appendChild(el);
+  }
+}
+
+function buildTimes() {
+  const grid = document.getElementById('time-grid');
+  grid.innerHTML = '';
+  document.getElementById('s2-sub').textContent = sel.date ? `Turnos disponibles — ${sel.date}` : 'Turnos disponibles';
+  for (let h = 9; h < 17; h++) {
+    ['00','30'].forEach(m => {
+      const t = `${String(h).padStart(2,'0')}:${m}`;
+      const taken = TAKEN_TIMES.includes(t);
+      const el = document.createElement('div');
+      el.className = 'time-slot' + (taken ? ' taken' : '');
+      el.textContent = taken ? `${t} ✕` : t;
+      if (!taken) {
+        el.onclick = () => {
+          document.querySelectorAll('.time-slot:not(.taken)').forEach(c => c.classList.remove('selected'));
+          el.classList.add('selected');
+          sel.time = t;
+        };
+      }
+      grid.appendChild(el);
+    });
+  }
+}
+
+function setProgress(step) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('ps' + i);
+    el.classList.remove('active','done');
+    if (i < step) el.classList.add('done');
+    else if (i === step) el.classList.add('active');
+  }
+}
+
+function goStep(n) {
+  if (n === 2) {
+    if (!sel.date) { showErr('err1'); return; }
+    hideErr('err1');
+    buildTimes();
+  }
+  if (n === 3) {
+    if (!sel.time) { showErr('err2'); return; }
+    hideErr('err2');
+  }
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s' + n).classList.add('active');
+  setProgress(n);
+  window.scrollTo(0,0);
+}
+
+function showErr(id) { document.getElementById(id).classList.add('show'); }
+function hideErr(id) { document.getElementById(id).classList.remove('show'); }
+
+function confirmBooking() {
+  const name = document.getElementById('f-name').value.trim();
+  const last = document.getElementById('f-last').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const service = document.getElementById('f-service').value;
+  const pickupIdx = document.getElementById('f-pickup').selectedIndex;
+  const pickupLabel = document.getElementById('f-pickup').options[pickupIdx].text;
+  const pickupDays = parseInt(document.getElementById('f-pickup').value);
+
+  if (!name || !phone || !email || !service) { showErr('err3'); return; }
+  hideErr('err3');
+
+  const fullName = `${name} ${last}`.trim();
+  const svcLabel = SERVICE_LABELS[service] || service;
+
+  document.getElementById('success-sub').textContent = `Te avisamos cuando tu ropa esté lista, ${name}.`;
+
+  document.getElementById('confirm-summary').innerHTML = `
+    <div class="confirm-row"><span>Cliente</span><span>${fullName}</span></div>
+    <div class="confirm-row"><span>Día</span><span>${sel.date}</span></div>
+    <div class="confirm-row"><span>Horario de entrega</span><span>${sel.time} hs</span></div>
+    <div class="confirm-row"><span>Servicio</span><span>${svcLabel}</span></div>
+    <div class="confirm-row"><span>Retiro estimado</span><span>${pickupLabel}</span></div>
+    <div class="confirm-row"><span>Contacto</span><span>${phone}</span></div>
+  `;
+
+  const notifs = [
+    { text: 'Confirmación enviada', detail: `Email enviado a ${email}` },
+    { text: 'Aviso de ropa lista', detail: pickupDays === 0 ? 'Programado para hoy a las 16:00 hs' : `Programado para ${pickupLabel.toLowerCase()}` },
+    { text: 'Recordatorio de retiro', detail: '2 horas antes del cierre' },
+  ];
+
+  document.getElementById('notif-list').innerHTML = notifs.map(n => `
+    <div class="notif-item">
+      <div class="notif-dot"></div>
+      <div class="notif-text"><p>${n.text}</p><span>${n.detail}</span></div>
+    </div>
+  `).join('');
+
+  goStep(4);
+}
+
+function resetBooking() {
+  sel = { date: null, time: null };
+  ['f-name','f-last','f-phone','f-email'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-service').selectedIndex = 0;
+  document.getElementById('f-pickup').selectedIndex = 0;
+  buildDates();
+  goStep(1);
+}
+
+buildDates();
+</script>
+</body>
+</html>
